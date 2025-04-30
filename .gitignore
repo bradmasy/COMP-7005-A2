@@ -20,3 +20,5 @@
 *.info
 /Server/obj
 /Client/obj
+*.dll
+*/bin
