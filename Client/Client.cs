@@ -5,36 +5,73 @@ using System.Text;
 using static Client.Constants;
 
 namespace Client;
+
 public class Client(string ipAddress, int port)
 {
-
     private const int ByteArraySize = 1024;
-    private Socket socket { get; set; } = new(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+    private Socket Socket { get; set; } = new(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
     public async Task Connect()
     {
         var endPoint = new IPEndPoint(IPAddress.Parse(ipAddress), port);
-        await socket.ConnectAsync(endPoint);
+        await Socket.ConnectAsync(endPoint);
     }
 
     public async Task Send(string message, string password)
     {
-
         var bytes = Encoding.ASCII.GetBytes($"{message}|{password}");
-        var descriptor = await socket.SendAsync(bytes, SocketFlags.None);
+        var descriptor = await Socket.SendAsync(bytes, SocketFlags.None);
         Console.WriteLine(descriptor);
     }
 
     public async Task<string> Receive()
     {
         var buffer = new byte[ByteArraySize];
-        var numberOfBytesReceived = await socket.ReceiveAsync(buffer, SocketFlags.None);
+        var numberOfBytesReceived = await Socket.ReceiveAsync(buffer, SocketFlags.None);
 
         if (numberOfBytesReceived <= 0) return string.Empty;
         var receivedMessage = Encoding.UTF8.GetString(buffer, 0, numberOfBytesReceived);
         Console.WriteLine($"incoming message:{receivedMessage}");
         return receivedMessage;
     }
+
+    public string Decrypt(string encryptedMessage, string password)
+    {
+        var builder = new StringBuilder();
+        var shiftArray = password.ToCharArray().Select(c => (int)c).ToArray();
+        var messageCharArray = encryptedMessage.ToCharArray();
+
+        var index = 0;
+        var shiftIndex = 0;
+
+        while (index < encryptedMessage.Length)
+        {
+            var letter = messageCharArray[index];
+            var shift = shiftArray[shiftIndex];
+
+            if (char.IsLetter(letter))
+            {
+                var offset = char.IsUpper(letter) ? 'A' : 'a';
+                var letterIndex = letter - offset;
+                var shiftAmount = (shift - offset) % 26;
+
+                var decryptedIndex = (letterIndex - shiftAmount + 26) % 26;
+                var decryptedChar = (char)(decryptedIndex + offset);
+
+                builder.Append(decryptedChar);
+            }
+            else
+            {
+                builder.Append(letter); // Keep spaces and symbols unchanged
+            }
+
+            index++;
+            shiftIndex = (shiftIndex + 1) % shiftArray.Length;
+        }
+
+        return builder.ToString();
+    }
+
 
     // public async Task<int> SendCipher(string message, int amount)
     // {
@@ -85,7 +122,7 @@ public class Client(string ipAddress, int port)
 
     public void Teardown()
     {
-        socket.Close();
+        Socket.Close();
     }
 
     public void DisplayMessage(string message)
