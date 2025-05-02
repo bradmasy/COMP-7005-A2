@@ -1,6 +1,6 @@
-namespace Server;
+namespace BusinessLogic;
 
-public static class Constants
+public class Constants
 {
     public const char Delimiter = '|';
     public const int Word = 0;
@@ -17,5 +17,4 @@ public static class Constants
     public const int AsciiShift = 26;
     public const int AmountOfArgs = 2;
     public const int MinFilePathLength = 13;
-
-};
+}

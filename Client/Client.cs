@@ -1,8 +1,6 @@
-using System.Formats.Asn1;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
-using static Client.Constants;
 
 namespace Client;
 
@@ -35,33 +33,7 @@ public class Client(string ipAddress, int port)
         return receivedMessage;
     }
 
-    public string Decrypt(string encryptedMessage, string password)
-    {
-        var builder = new StringBuilder();
-        var shiftArray = password.ToUpper().ToCharArray().Select(c => c - 'A').ToArray();
-
-        var shiftIndex = 0;
-
-        foreach (var letter in encryptedMessage)
-        {
-            if (char.IsLetter(letter))
-            {
-                var offset = char.IsUpper(letter) ? 'A' : 'a';
-                var shift = shiftArray[shiftIndex];
-
-                var decryptedChar = (char)(((letter - offset - shift + 26) % 26) + offset);
-                builder.Append(decryptedChar);
-
-                shiftIndex = (shiftIndex + 1) % shiftArray.Length;
-            }
-            else
-            {
-                builder.Append(letter);
-            }
-        }
-
-        return builder.ToString();
-    }
+  
 
 
     // public async Task<int> SendCipher(string message, int amount)

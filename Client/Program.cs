@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using BusinessLogic;
 
 namespace Client;
 
@@ -17,8 +18,8 @@ class Program
             await client.Connect();
             await client.Send(message, password);
             var data = await client.Receive();
-            var decrypted = client.Decrypt(data, password);
-            
+            var decrypted = EncryptionService.Decrypt(data, password);
+
             Console.WriteLine(decrypted);
             client.Teardown();
         }

@@ -1,4 +1,4 @@
-﻿using static Server.Constants;
+﻿using static BusinessLogic.Constants;
 
 namespace Server;
 

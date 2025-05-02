@@ -1,8 +1,8 @@
 using System.Net;
-using System.Net.Security;
 using System.Net.Sockets;
 using System.Text;
-using static Server.Constants;
+using BusinessLogic;
+using static BusinessLogic.Constants;
 
 namespace Server;
 
@@ -10,7 +10,6 @@ public class Server(string ipAddress, int port)
 {
     private static readonly byte[] Buffer = new byte[ByteArraySize];
     private readonly Socket _serverSocket = new(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-    private readonly EncryptionService _encryptionService = new EncryptionService();
 
     public async Task Run()
     {
@@ -30,7 +29,7 @@ public class Server(string ipAddress, int port)
                     var message = await Read(clientSocket);
                     Console.WriteLine("message");
                     var processed = ProcessMessage(message);
-                    var encoded = _encryptionService.Encrypt(processed[Message], processed[Password]);
+                    var encoded = EncryptionService.Encrypt(processed[Message], processed[Password]);
                     var descriptor = await Send(clientSocket, encoded);
                     Console.WriteLine($"Received: {message}");
                 }
@@ -83,7 +82,7 @@ public class Server(string ipAddress, int port)
     {
         using var ms = new MemoryStream();
         var received = await client.ReceiveAsync(Buffer, SocketFlags.None);
-        
+
         if (received > 0)
         {
             ms.Write(Buffer, 0, received);
