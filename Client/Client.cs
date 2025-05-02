@@ -38,35 +38,26 @@ public class Client(string ipAddress, int port)
     public string Decrypt(string encryptedMessage, string password)
     {
         var builder = new StringBuilder();
-        var shiftArray = password.ToCharArray().Select(c => (int)c).ToArray();
-        var messageCharArray = encryptedMessage.ToCharArray();
+        var shiftArray = password.ToUpper().ToCharArray().Select(c => c - 'A').ToArray();
 
-        var index = 0;
         var shiftIndex = 0;
 
-        while (index < encryptedMessage.Length)
+        foreach (var letter in encryptedMessage)
         {
-            var letter = messageCharArray[index];
-            var shift = shiftArray[shiftIndex];
-
             if (char.IsLetter(letter))
             {
                 var offset = char.IsUpper(letter) ? 'A' : 'a';
-                var letterIndex = letter - offset;
-                var shiftAmount = (shift - offset) % 26;
+                var shift = shiftArray[shiftIndex];
 
-                var decryptedIndex = (letterIndex - shiftAmount + 26) % 26;
-                var decryptedChar = (char)(decryptedIndex + offset);
-
+                var decryptedChar = (char)(((letter - offset - shift + 26) % 26) + offset);
                 builder.Append(decryptedChar);
+
+                shiftIndex = (shiftIndex + 1) % shiftArray.Length;
             }
             else
             {
-                builder.Append(letter); // Keep spaces and symbols unchanged
+                builder.Append(letter);
             }
-
-            index++;
-            shiftIndex = (shiftIndex + 1) % shiftArray.Length;
         }
 
         return builder.ToString();
