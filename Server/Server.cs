@@ -11,6 +11,7 @@ public class Server(string ipAddress, int port)
     private static readonly byte[] Buffer = new byte[ByteArraySize];
     private readonly Socket _serverSocket = new(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
     private readonly EncryptionService _encryptionService = new EncryptionService();
+
     public async Task Run()
     {
         try
@@ -22,11 +23,28 @@ public class Server(string ipAddress, int port)
             while (true)
             {
                 var clientSocket = await _serverSocket.AcceptAsync();
-                var message = await Read(clientSocket);
-              //  var encoded = _encryptionService.Encrypt(message, password);
-                Console.WriteLine($"Received: {message}");
 
-                clientSocket.Close();
+                try
+                {
+                    Console.WriteLine("incoming client");
+                    var message = await Read(clientSocket);
+                    Console.WriteLine("message");
+                    var processed = ProcessMessage(message);
+                    var encoded = _encryptionService.Encrypt(processed[Message], processed[Password]);
+                    var descriptor = await Send(clientSocket, encoded);
+                    Console.WriteLine($"Received: {message}");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                    var encodedError = Encoding.ASCII.GetBytes(ex.Message);
+                    await Send(clientSocket, encodedError);
+                }
+                finally
+                {
+                    Console.WriteLine("Closing");
+                    clientSocket.Close();
+                }
             }
         }
         catch (Exception ex)
@@ -40,6 +58,20 @@ public class Server(string ipAddress, int port)
         _serverSocket.Close();
     }
 
+    private async Task<int> Send(Socket client, byte[] data)
+    {
+        var descriptor = await client.SendAsync(data, SocketFlags.None);
+        return descriptor;
+    }
+
+    private static string[] ProcessMessage(string message)
+    {
+        var messageParts = message.Split("|");
+        if (messageParts.Length < 2) throw new Exception($"Invalid message: {message}");
+        return messageParts;
+    }
+
+
     private void BindAndListen()
     {
         var endpoint = new IPEndPoint(IPAddress.Parse(ipAddress), port);
@@ -50,21 +82,20 @@ public class Server(string ipAddress, int port)
     private static async Task<string> Read(Socket client)
     {
         using var ms = new MemoryStream();
-
-        int received;
-
-        while ((received = await client.ReceiveAsync(Buffer, SocketFlags.None)) > 0)
+        var received = await client.ReceiveAsync(Buffer, SocketFlags.None);
+        
+        if (received > 0)
         {
             ms.Write(Buffer, 0, received);
         }
 
-        return Encoding.UTF8.GetString(ms.ToArray());
+        var result = Encoding.UTF8.GetString(ms.ToArray());
+        Console.WriteLine($"Message content: {result}");
+        return result;
     }
 
     // private byte[] Encrypt()
     // {
-    //    // var
+    //    // vaΩΩr
     // }
-    
-    
 }

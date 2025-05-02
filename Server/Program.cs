@@ -16,17 +16,20 @@ class Program
         try
         {
             Validator.ValidateArgs(args);
-
+            
             var ipAddress = args[IpAddress];
             var port = int.Parse(args[Port]);
             var server = new Server(ipAddress, port);
 
+           
             await server.Run();
+           
 
             server.TearDown();
         }
         catch (Exception ex)
         {
+            
             Console.WriteLine($"Error: {ex.Message}");
         }
     }

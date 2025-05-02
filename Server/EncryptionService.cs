@@ -1,4 +1,5 @@
 using System.Text;
+using static Server.Constants;
 
 namespace Server;
 
@@ -13,32 +14,26 @@ public class EncryptionService()
     private static string VigenereCipher(string message, string password)
     {
         var builder = new StringBuilder();
-        // convert password to number array
-        var shiftArray = password.ToCharArray().Select(c => (int)c).ToArray();
 
-        var messageCharArray = message.ToCharArray();
+        var shiftArray = password.ToUpper().ToCharArray().Select(c => c - 'A').ToArray();
 
-        var index = 0;
         var shiftIndex = 0;
 
-        while (index < message.Length)
+        foreach (var letter in message)
         {
-            var letter = messageCharArray[index];
-            var shift = shiftArray[shiftIndex];
-
             if (char.IsLetter(letter))
             {
-                var charToInt = (int)letter + shift;
-                var intToChar = (char)charToInt;
-                builder.Append(intToChar);
+                var offset = char.IsUpper(letter) ? UpperAscii : LowerAscii;
+                var shift = shiftArray[shiftIndex];
+
+                var encryptedChar = (char)(((letter - offset + shift) % 26) + offset);
+                builder.Append(encryptedChar);
+
+                shiftIndex = (shiftIndex + 1) % shiftArray.Length;
             }
-
-            index++;
-            shiftIndex++;
-
-            if (shiftIndex == shiftArray.Length)
+            else // any other char ignore.
             {
-                shiftIndex = 0;
+                builder.Append(letter);
             }
         }
 
