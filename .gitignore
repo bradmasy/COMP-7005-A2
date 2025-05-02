@@ -23,3 +23,5 @@
 *.dll
 */bin
 Client/bin
+
+BusinessLogic/obj
