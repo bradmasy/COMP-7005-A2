@@ -36,6 +36,11 @@ public class Server(string ipAddress, int port)
         _serverSocket.Close();
     }
 
+    private static void Flush()
+    {
+        Buffer.AsSpan().Clear();
+    }
+
     private static async Task HandleClient(Socket clientSocket)
     {
         try
@@ -46,19 +51,35 @@ public class Server(string ipAddress, int port)
 
             await Send(clientSocket, encoded);
 
-            Console.WriteLine(
-                $"Message processed | Original: [{processed[Message]}] Encoded:[{Encoding.ASCII.GetString(encoded)}]");
+            DisplayMessage(processed[Message], Encoding.ASCII.GetString(encoded));
+            
+            //Flush();
         }
         catch (Exception ex)
         {
-            var errorResponse = Encoding.ASCII.GetBytes($"Server error: {ex.Message}");
+            var errorResponse = CreateErrorMessage(ex.Message);
             await Send(clientSocket, errorResponse);
         }
         finally
         {
-            Console.WriteLine("Closing client connection");
-            clientSocket.Close();
+            EndClientSession(clientSocket);
         }
+    }
+
+    private static void DisplayMessage(string message, string encoded)
+    {
+        Console.WriteLine(
+            $"Message processed | Original: [{message}] Encoded:[{encoded}]");
+    }
+
+    private static void EndClientSession(Socket clientSocket)
+    {
+        clientSocket.Close();
+    }
+
+    private static byte[] CreateErrorMessage(string message)
+    {
+        return Encoding.UTF8.GetBytes(message);
     }
 
     private static async Task Send(Socket client, byte[] data)
@@ -76,7 +97,6 @@ public class Server(string ipAddress, int port)
         if (messageParts.Length < ExpectedMessages) throw new Exception($"Invalid message: {message}");
         return messageParts;
     }
-
 
     private void BindAndListen()
     {
