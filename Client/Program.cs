@@ -1,5 +1,6 @@
-﻿using System.Text;
-using BusinessLogic;
+﻿using BusinessLogic;
+using Server;
+using static BusinessLogic.Constants;
 
 namespace Client;
 
@@ -9,14 +10,18 @@ class Program
     {
         try
         {
-            var message = args[0];
-            var password = args[1];
-            var ipAddress = args[2];
-            var port = int.Parse(args[3]);
+            Validator.ValidateClientArguments(args);
+            
+            var message = args[Message];
+            var password = args[Password];
+            var ipAddress = args[IpAddressIndex];
+            var port = int.Parse(args[PortIndex]);
+            
             var client = new Client(ipAddress, port);
 
             await client.Connect();
             await client.Send(message, password);
+            
             var data = await client.Receive();
             var decrypted = EncryptionService.Decrypt(data, password);
 

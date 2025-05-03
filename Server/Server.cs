@@ -22,28 +22,7 @@ public class Server(string ipAddress, int port)
             while (true)
             {
                 var clientSocket = await _serverSocket.AcceptAsync();
-
-                try
-                {
-                    Console.WriteLine("incoming client");
-                    var message = await Read(clientSocket);
-                    Console.WriteLine("message");
-                    var processed = ProcessMessage(message);
-                    var encoded = EncryptionService.Encrypt(processed[Message], processed[Password]);
-                    var descriptor = await Send(clientSocket, encoded);
-                    Console.WriteLine($"Received: {message}");
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(ex.Message);
-                    var encodedError = Encoding.ASCII.GetBytes(ex.Message);
-                    await Send(clientSocket, encodedError);
-                }
-                finally
-                {
-                    Console.WriteLine("Closing");
-                    clientSocket.Close();
-                }
+                await HandleClient(clientSocket);
             }
         }
         catch (Exception ex)
@@ -57,16 +36,44 @@ public class Server(string ipAddress, int port)
         _serverSocket.Close();
     }
 
-    private async Task<int> Send(Socket client, byte[] data)
+    private static async Task HandleClient(Socket clientSocket)
+    {
+        try
+        {
+            var message = await Read(clientSocket);
+            var processed = ProcessMessage(message);
+            var encoded = EncryptionService.Encrypt(processed[Message], processed[Password]);
+
+            await Send(clientSocket, encoded);
+
+            Console.WriteLine(
+                $"Message processed | Original: [{processed[Message]}] Encoded:[{Encoding.ASCII.GetString(encoded)}]");
+        }
+        catch (Exception ex)
+        {
+            var errorResponse = Encoding.ASCII.GetBytes($"Server error: {ex.Message}");
+            await Send(clientSocket, errorResponse);
+        }
+        finally
+        {
+            Console.WriteLine("Closing client connection");
+            clientSocket.Close();
+        }
+    }
+
+    private static async Task Send(Socket client, byte[] data)
     {
         var descriptor = await client.SendAsync(data, SocketFlags.None);
-        return descriptor;
+        if (descriptor <= 0)
+        {
+            throw new Exception("Error transmitting message to client.");
+        }
     }
 
     private static string[] ProcessMessage(string message)
     {
-        var messageParts = message.Split("|");
-        if (messageParts.Length < 2) throw new Exception($"Invalid message: {message}");
+        var messageParts = message.Split(Delimiter);
+        if (messageParts.Length < ExpectedMessages) throw new Exception($"Invalid message: {message}");
         return messageParts;
     }
 
@@ -80,21 +87,7 @@ public class Server(string ipAddress, int port)
 
     private static async Task<string> Read(Socket client)
     {
-        using var ms = new MemoryStream();
         var received = await client.ReceiveAsync(Buffer, SocketFlags.None);
-
-        if (received > 0)
-        {
-            ms.Write(Buffer, 0, received);
-        }
-
-        var result = Encoding.UTF8.GetString(ms.ToArray());
-        Console.WriteLine($"Message content: {result}");
-        return result;
+        return received > 0 ? Encoding.UTF8.GetString(Buffer, 0, received) : string.Empty;
     }
-
-    // private byte[] Encrypt()
-    // {
-    //    // vaΩΩr
-    // }
 }

@@ -1,3 +1,4 @@
+using System.Net;
 using System.Text.RegularExpressions;
 using static BusinessLogic.Constants;
 
@@ -10,6 +11,7 @@ public static class Validator
         @"(\.(25[0-5]|2[0-4]\d|1\d{2}|[0-9]?\d)){3}$",
         RegexOptions.Compiled | RegexOptions.CultureInvariant
     );
+
     public static void ValidateArgs(string[] args)
     {
         if (args.Length == NoArgs)
@@ -31,6 +33,30 @@ public static class Validator
         if (!Ipv4Regex.IsMatch(args[IpAddress]))
         {
             throw new Exception("Invalid IP Address provided. Please try again.");
+        }
+    }
+
+
+    public static void ValidateClientArguments(string[] args)
+    {
+        if (args.Length != NoArgs)
+        {
+            throw new Exception("no arguments provided.");
+        }
+
+        if (args.Length < 4)
+        {
+            throw new Exception("Invalid number of arguments provided. Please try again.");
+        }
+
+        if (!IPAddress.TryParse(args[IpAddressIndex], out _))
+        {
+            throw new Exception("Invalid IP Address provided. Please try again.");
+        }
+        
+        if (!int.TryParse(args[PortIndex], out var port) || port < MinPort || port > MaxPort)
+        {
+            throw new ArgumentException("Invalid port number. Please enter a number between 1 and 65535.");
         }
     }
 }

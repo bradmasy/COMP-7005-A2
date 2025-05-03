@@ -26,7 +26,7 @@ public static class EncryptionService
                 var offset = char.IsUpper(letter) ? UpperAscii : LowerAscii;
                 var shift = shiftArray[shiftIndex];
 
-                var encryptedChar = (char)(((letter - offset + shift) % 26) + offset);
+                var encryptedChar = (char)(((letter - offset + shift) % AsciiShift) + offset);
                 builder.Append(encryptedChar);
 
                 shiftIndex = (shiftIndex + 1) % shiftArray.Length;
