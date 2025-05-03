@@ -19,4 +19,5 @@ public class Constants
     public const int MinPort = 1;
     public const int MaxPort = 65535;
     public const int ExpectedMessages = 2;
+    public const int MaxClientArgs = 4;
 }
