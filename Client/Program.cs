@@ -7,6 +7,8 @@ class Program
 {
     static async Task Main(string[] args)
     {
+        Client? client = null;
+
         try
         {
             Validator.ValidateClientArguments(args);
@@ -16,7 +18,7 @@ class Program
             var ipAddress = args[IpAddressIndex];
             var port = int.Parse(args[PortIndex]);
 
-            var client = new Client(ipAddress, port);
+            client = new Client(ipAddress, port);
 
             await client.Connect();
             await client.Send(message, password);
@@ -25,11 +27,14 @@ class Program
             var decrypted = EncryptionService.Decrypt(data, password);
 
             client.DisplayMessage(decrypted);
-            client.Teardown();
         }
         catch (Exception ex)
         {
             Console.WriteLine(ex.Message);
+        }
+        finally
+        {
+            client?.Teardown();
         }
     }
 }
