@@ -25,7 +25,9 @@ class Program
 
             var data = await client.Receive();
 
-            var decrypted = data.Contains("ERROR") ? data : EncryptionService.Decrypt(data, password);
+            if (data.Contains("ERROR")) throw new Exception(data);
+
+            var decrypted = EncryptionService.Decrypt(data, password);
 
             client.DisplayMessage(decrypted);
         }
