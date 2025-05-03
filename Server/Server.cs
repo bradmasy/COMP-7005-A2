@@ -49,7 +49,7 @@ public class Server(string ipAddress, int port)
             var message = await Receive(clientSocket);
             var processed = ProcessMessage(message);
             var encoded = EncryptionService.Encrypt(processed[Message], processed[Password]);
-
+            throw new Exception("Server closing");
             await Send(clientSocket, encoded);
 
             var success = ConstructSuccess(processed[Message], Encoding.ASCII.GetString(encoded));
@@ -85,7 +85,7 @@ public class Server(string ipAddress, int port)
 
     private static byte[] CreateErrorMessage(string message)
     {
-        return Encoding.UTF8.GetBytes(message);
+        return Encoding.UTF8.GetBytes($"ERROR: {message}");
     }
 
     private static async Task Send(Socket client, byte[] data)
@@ -106,6 +106,9 @@ public class Server(string ipAddress, int port)
 
     private void BindAndListen()
     {
+        // Set socket option before binding
+        _serverSocket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+        
         var endpoint = new IPEndPoint(IPAddress.Parse(ipAddress), port);
         _serverSocket.Bind(endpoint);
         _serverSocket.Listen(Connections);
@@ -114,6 +117,11 @@ public class Server(string ipAddress, int port)
     private static async Task<string> Receive(Socket client)
     {
         var received = await client.ReceiveAsync(Buffer, SocketFlags.None);
-        return received > 0 ? Encoding.UTF8.GetString(Buffer, 0, received) : string.Empty;
+        if (received == 0)
+        {
+            throw new Exception("Client disconnected unexpectedly");
+        }
+
+        return Encoding.UTF8.GetString(Buffer, 0, received);
     }
 }

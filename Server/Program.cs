@@ -8,7 +8,7 @@ class Program
     {
         try
         {
-            Validator.ValidateArgs(args);
+            Validator.ValidateServerArgs(args);
 
             var ipAddress = args[IpAddress];
             var port = int.Parse(args[Port]);

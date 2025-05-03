@@ -12,16 +12,16 @@ public static class Validator
         RegexOptions.Compiled | RegexOptions.CultureInvariant
     );
 
-    public static void ValidateArgs(string[] args)
+    public static void ValidateServerArgs(string[] args)
     {
-        if (args.Length == NoArgs)
+        switch (args.Length)
         {
-            throw new Exception("Please provide a path to the UNIX domain socket.");
-        }
-
-        if (args.Length > AmountOfArgs)
-        {
-            throw new Exception("Too many arguments provided.");
+            case NoArgs:
+                throw new Exception("Please provide an IP address and Port number.");
+            case < AmountOfArgs:
+                throw new Exception("Please provide two valid arguments. The IP address and port.");
+            case > AmountOfArgs:
+                throw new Exception("Too many arguments provided.");
         }
 
         if (string.IsNullOrEmpty(args[IpAddress]) || string.IsNullOrWhiteSpace(args[IpAddress]))
@@ -29,10 +29,15 @@ public static class Validator
             throw new Exception("Null or empty IP Address provided. Please try again.");
         }
 
-        Console.WriteLine($"[{args[IpAddress]}]");
         if (!Ipv4Regex.IsMatch(args[IpAddress]))
         {
             throw new Exception("Invalid IP Address provided. Please try again.");
+        }
+
+
+        if (!int.TryParse(args[Port], out var port) || port < MinPort || port > MaxPort)
+        {
+            throw new ArgumentException("Invalid port number. Please enter a number between 1 and 65535.");
         }
     }
 

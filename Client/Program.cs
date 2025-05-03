@@ -24,7 +24,8 @@ class Program
             await client.Send(message, password);
 
             var data = await client.Receive();
-            var decrypted = EncryptionService.Decrypt(data, password);
+
+            var decrypted = data.Contains("ERROR") ? data : EncryptionService.Decrypt(data, password);
 
             client.DisplayMessage(decrypted);
         }
