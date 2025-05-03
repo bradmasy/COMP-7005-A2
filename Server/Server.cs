@@ -43,33 +43,39 @@ public class Server(string ipAddress, int port)
 
     private static async Task HandleClient(Socket clientSocket)
     {
+        Console.WriteLine("Client connected");
         try
         {
-            var message = await Read(clientSocket);
+            var message = await Receive(clientSocket);
             var processed = ProcessMessage(message);
             var encoded = EncryptionService.Encrypt(processed[Message], processed[Password]);
 
             await Send(clientSocket, encoded);
 
-            DisplayMessage(processed[Message], Encoding.ASCII.GetString(encoded));
-            
-            //Flush();
+            var success = ConstructSuccess(processed[Message], Encoding.ASCII.GetString(encoded));
+            DisplayMessage(success);
         }
         catch (Exception ex)
         {
             var errorResponse = CreateErrorMessage(ex.Message);
             await Send(clientSocket, errorResponse);
+            DisplayMessage(ex.Message);
         }
         finally
         {
             EndClientSession(clientSocket);
+            Flush();
         }
     }
 
-    private static void DisplayMessage(string message, string encoded)
+    private static void DisplayMessage(string message)
     {
-        Console.WriteLine(
-            $"Message processed | Original: [{message}] Encoded:[{encoded}]");
+        Console.WriteLine(message);
+    }
+
+    private static string ConstructSuccess(string message, string encoded)
+    {
+        return $"Message processed | Original: [{message}] Encoded:[{encoded}]";
     }
 
     private static void EndClientSession(Socket clientSocket)
@@ -105,7 +111,7 @@ public class Server(string ipAddress, int port)
         _serverSocket.Listen(Connections);
     }
 
-    private static async Task<string> Read(Socket client)
+    private static async Task<string> Receive(Socket client)
     {
         var received = await client.ReceiveAsync(Buffer, SocketFlags.None);
         return received > 0 ? Encoding.UTF8.GetString(Buffer, 0, received) : string.Empty;

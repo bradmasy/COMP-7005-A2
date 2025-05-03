@@ -1,4 +1,5 @@
-﻿using static BusinessLogic.Constants;
+﻿using BusinessLogic;
+using static BusinessLogic.Constants;
 
 namespace Server;
 class Program

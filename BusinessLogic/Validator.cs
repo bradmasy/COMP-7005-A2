@@ -2,7 +2,7 @@ using System.Net;
 using System.Text.RegularExpressions;
 using static BusinessLogic.Constants;
 
-namespace Server;
+namespace BusinessLogic;
 
 public static class Validator
 {
@@ -39,21 +39,19 @@ public static class Validator
 
     public static void ValidateClientArguments(string[] args)
     {
-        if (args.Length != NoArgs)
+        switch (args.Length)
         {
-            throw new Exception("no arguments provided.");
-        }
-
-        if (args.Length < 4)
-        {
-            throw new Exception("Invalid number of arguments provided. Please try again.");
+            case NoArgs:
+                throw new Exception("no arguments provided.");
+            case < MaxClientArgs:
+                throw new Exception("Invalid number of arguments provided. Please try again.");
         }
 
         if (!IPAddress.TryParse(args[IpAddressIndex], out _))
         {
             throw new Exception("Invalid IP Address provided. Please try again.");
         }
-        
+
         if (!int.TryParse(args[PortIndex], out var port) || port < MinPort || port > MaxPort)
         {
             throw new ArgumentException("Invalid port number. Please enter a number between 1 and 65535.");
